@@ -1,0 +1,2672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Educational AI Assistant - Question Solver</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ff6b6b, #feca57);
+            padding: 30px;
+            text-align: center;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        .sidebar {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+        }
+
+        .subject-buttons {
+            display: grid;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .subject-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .subject-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+        }
+
+        .subject-btn.active {
+            background: linear-gradient(135deg, #ff6b6b, #feca57);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(255, 107, 107, 0.3);
+        }
+
+        .api-setup {
+            background: #e8f4f8;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .api-setup h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .api-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-bottom: 10px;
+            transition: border-color 0.3s ease;
+        }
+
+        .api-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .api-status {
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .api-status.connected {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .api-status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .chat-container {
+            background: white;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            height: 600px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 15px 15px 0 0;
+            text-align: center;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .message.user {
+            text-align: right;
+        }
+
+        .message.ai {
+            text-align: left;
+        }
+
+        .message-content {
+            display: inline-block;
+            max-width: 80%;
+            padding: 15px 20px;
+            border-radius: 20px;
+            font-size: 1rem;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .message.ai .message-content {
+            background: white;
+            color: #333;
+            border: 2px solid #e9ecef;
+            border-bottom-left-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            background: white;
+            border-top: 2px solid #e9ecef;
+            border-radius: 0 0 15px 15px;
+        }
+
+        .chat-input-wrapper {
+            display: flex;
+            gap: 15px;
+            align-items: flex-end;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            font-size: 1rem;
+            resize: none;
+            min-height: 50px;
+            max-height: 120px;
+            transition: border-color 0.3s ease;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .send-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            min-width: 80px;
+        }
+
+        .send-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .quick-btn {
+            background: linear-gradient(135deg, #feca57, #ff9ff3);
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .quick-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(254, 202, 87, 0.3);
+        }
+
+        .language-toggle {
+            background: #34495e;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            width: 100%;
+        }
+
+        .language-toggle:hover {
+            background: #2c3e50;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .header p {
+                font-size: 1rem;
+            }
+
+            .chat-container {
+                height: 500px;
+            }
+
+            .subject-buttons {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .quick-actions {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
+            .header {
+                padding: 20px;
+            }
+
+            .main-content {
+                padding: 15px;
+            }
+
+            .subject-buttons {
+                grid-template-columns: 1fr;
+            }
+
+            .message-content {
+                max-width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎓 Educational AI Assistant</h1>
+            <p>Your Smart Study Companion for All Subjects</p>
+        </div>
+
+        <div class="main-content">
+            <div class="sidebar">
+                <div class="api-setup">
+                    <h3>🔑 API Setup</h3>
+                    <input type="password" class="api-input" id="apiKey" placeholder="Enter your Gemini API Key">
+                    <div class="api-status disconnected" id="apiStatus">API Key Required</div>
+                    <small>Get your free API key from <a href="https://ai.google.dev/" target="_blank">Google AI Studio</a></small>
+                </div>
+
+                <button class="language-toggle" id="languageToggle">🌐 Switch to Hindi</button>
+
+                <div class="subject-buttons">
+                    <button class="subject-btn active" data-subject="general">📚 General Help</button>
+                    <button class="subject-btn" data-subject="math">🔢 Mathematics</button>
+                    <button class="subject-btn" data-subject="physics">⚛️ Physics</button>
+                    <button class="subject-btn" data-subject="chemistry">🧪 Chemistry</button>
+                    <button class="subject-btn" data-subject="biology">🧬 Biology</button>
+                    <button class="subject-btn" data-subject="english">📖 English</button>
+                    <button class="subject-btn" data-subject="hindi">🇮🇳 Hindi</button>
+                    <button class="subject-btn" data-subject="history">🏛️ History</button>
+                    <button class="subject-btn" data-subject="geography">🌍 Geography</button>
+                </div>
+
+                <div class="quick-actions">
+                    <button class="quick-btn" data-action="solve">🧮 Solve Problem</button>
+                    <button class="quick-btn" data-action="explain">💡 Explain Concept</button>
+                    <button class="quick-btn" data-action="practice">📝 Practice Questions</button>
+                    <button class="quick-btn" data-action="summary">📋 Create Summary</button>
+                </div>
+            </div>
+
+            <div class="chat-container">
+                <div class="chat-header">
+                    <h3 id="chatTitle">General Help - Ask me anything!</h3>
+                </div>
+
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message ai">
+                        <div class="message-content">
+                            Welcome! I'm your educational AI assistant. I can help you with:
+                            <br>• Mathematics problems and concepts
+                            <br>• Physics numerical and theory
+                            <br>• Chemistry reactions and equations
+                            <br>• Biology diagrams and explanations
+                            <br>• English grammar and literature
+                            <br>• Hindi language and literature
+                            <br>• History facts and analysis
+                            <br>• Geography maps and climate
+                            <br><br>Please set up your Gemini API key first, then ask me any question!
+                        </div>
+                    </div>
+                </div>
+
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    Processing your question...
+                </div>
+
+                <div class="chat-input-container">
+                    <div class="chat-input-wrapper">
+                        <textarea class="chat-input" id="chatInput" placeholder="Type your question here... (e.g., Solve: 2x + 5 = 15)" rows="1"></textarea>
+                        <button class="send-btn" id="sendBtn">Send</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class EducationalAI {
+            constructor() {
+                this.apiKey = '';
+                this.currentSubject = 'general';
+                this.language = 'english';
+                this.chatMessages = document.getElementById('chatMessages');
+                this.chatInput = document.getElementById('chatInput');
+                this.sendBtn = document.getElementById('sendBtn');
+                this.loading = document.getElementById('loading');
+                this.apiStatus = document.getElementById('apiStatus');
+                this.chatTitle = document.getElementById('chatTitle');
+                
+                this.subjectPrompts = {
+                    general: 'You are a helpful educational assistant. Answer questions clearly and provide step-by-step solutions.',
+                    math: 'You are a mathematics tutor. Solve problems step-by-step, show your work, and explain concepts clearly. Use proper mathematical notation.',
+                    physics: 'You are a physics teacher. Explain concepts with real-world examples, solve numerical problems step-by-step, and include relevant formulas.',
+                    chemistry: 'You are a chemistry expert. Explain reactions, balance equations, and provide molecular explanations with proper chemical notation.',
+                    biology: 'You are a biology teacher. Explain biological processes, describe diagrams, and relate concepts to real-life examples.',
+                    english: 'You are an English language teacher. Help with grammar, literature analysis, essay writing, and vocabulary.',
+                    hindi: 'You are a Hindi language teacher. Help with Hindi grammar, literature, poetry analysis, and vocabulary. Respond in Hindi when appropriate.',
+                    history: 'You are a history teacher. Provide detailed historical context, analyze events, and explain cause-and-effect relationships.',
+                    geography: 'You are a geography teacher. Explain geographical concepts, describe locations, climate patterns, and environmental processes.'
+                };
+
+                this.initializeEventListeners();
+                this.loadApiKey();
+            }
+
+            initializeEventListeners() {
+                // API Key input
+                document.getElementById('apiKey').addEventListener('input', (e) => {
+                    this.apiKey = e.target.value;
+                    this.updateApiStatus();
+                    this.saveApiKey();
+                });
+
+                // Subject buttons
+                document.querySelectorAll('.subject-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        this.selectSubject(e.target.dataset.subject);
+                    });
+                });
+
+                // Quick action buttons
+                document.querySelectorAll('.quick-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        this.handleQuickAction(e.target.dataset.action);
+                    });
+                });
+
+                // Language toggle
+                document.getElementById('languageToggle').addEventListener('click', () => {
+                    this.toggleLanguage();
+                });
+
+                // Send button and Enter key
+                this.sendBtn.addEventListener('click', () => {
+                    this.sendMessage();
+                });
+
+                this.chatInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.sendMessage();
+                    }
+                });
+
+                // Auto-resize textarea
+                this.chatInput.addEventListener('input', () => {
+                    this.chatInput.style.height = 'auto';
+                    this.chatInput.style.height = Math.min(this.chatInput.scrollHeight, 120) + 'px';
+                });
+            }
+
+            loadApiKey() {
+                const savedKey = localStorage.getItem('geminiApiKey');
+                if (savedKey) {
+                    this.apiKey = savedKey;
+                    document.getElementById('apiKey').value = savedKey;
+                    this.updateApiStatus();
+                }
+            }
+
+            saveApiKey() {
+                localStorage.setItem('geminiApiKey', this.apiKey);
+            }
+
+            updateApiStatus() {
+                if (this.apiKey.length > 10) {
+                    this.apiStatus.textContent = 'API Key Connected ✓';
+                    this.apiStatus.className = 'api-status connected';
+                } else {
+                    this.apiStatus.textContent = 'API Key Required';
+                    this.apiStatus.className = 'api-status disconnected';
+                }
+            }
+
+            selectSubject(subject) {
+                this.currentSubject = subject;
+                
+                // Update active button
+                document.querySelectorAll('.subject-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.querySelector(`[data-subject="${subject}"]`).classList.add('active');
+
+                // Update chat title
+                const subjectTitles = {
+                    general: 'General Help - Ask me anything!',
+                    math: 'Mathematics - Solve problems step by step',
+                    physics: 'Physics - Understand concepts and solve numericals',
+                    chemistry: 'Chemistry - Reactions, equations, and concepts',
+                    biology: 'Biology - Life sciences and processes',
+                    english: 'English - Grammar, literature, and writing',
+                    hindi: 'Hindi - भाषा और साहित्य',
+                    history: 'History - Events, dates, and analysis',
+                    geography: 'Geography - Places, maps, and climate'
+                };
+
+                this.chatTitle.textContent = subjectTitles[subject];
+            }
+
+            toggleLanguage() {
+                this.language = this.language === 'english' ? 'hindi' : 'english';
+                const toggle = document.getElementById('languageToggle');
+                toggle.textContent = this.language === 'english' ? '🌐 Switch to Hindi' : '🌐 Switch to English';
+            }
+
+            handleQuickAction(action) {
+                const prompts = {
+                    solve: 'Please solve this problem step by step: ',
+                    explain: 'Please explain this concept in detail: ',
+                    practice: 'Give me practice questions for: ',
+                    summary: 'Create a summary of: '
+                }<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Educational AI Assistant - Question Solver</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ff6b6b, #feca57);
+            padding: 30px;
+            text-align: center;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        .sidebar {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+        }
+
+        .subject-buttons {
+            display: grid;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .subject-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .subject-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+        }
+
+        .subject-btn.active {
+            background: linear-gradient(135deg, #ff6b6b, #feca57);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(255, 107, 107, 0.3);
+        }
+
+        .api-setup {
+            background: #e8f4f8;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .api-setup h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .api-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-bottom: 10px;
+            transition: border-color 0.3s ease;
+        }
+
+        .api-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .api-status {
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .api-status.connected {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .api-status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .chat-container {
+            background: white;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            height: 600px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 15px 15px 0 0;
+            text-align: center;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .message.user {
+            text-align: right;
+        }
+
+        .message.ai {
+            text-align: left;
+        }
+
+        .message-content {
+            display: inline-block;
+            max-width: 80%;
+            padding: 15px 20px;
+            border-radius: 20px;
+            font-size: 1rem;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .message.ai .message-content {
+            background: white;
+            color: #333;
+            border: 2px solid #e9ecef;
+            border-bottom-left-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            background: white;
+            border-top: 2px solid #e9ecef;
+            border-radius: 0 0 15px 15px;
+        }
+
+        .chat-input-wrapper {
+            display: flex;
+            gap: 15px;
+            align-items: flex-end;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            font-size: 1rem;
+            resize: none;
+            min-height: 50px;
+            max-height: 120px;
+            transition: border-color 0.3s ease;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .send-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            min-width: 80px;
+        }
+
+        .send-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .quick-btn {
+            background: linear-gradient(135deg, #feca57, #ff9ff3);
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .quick-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(254, 202, 87, 0.3);
+        }
+
+        .language-toggle {
+            background: #34495e;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            width: 100%;
+        }
+
+        .language-toggle:hover {
+            background: #2c3e50;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .header p {
+                font-size: 1rem;
+            }
+
+            .chat-container {
+                height: 500px;
+            }
+
+            .subject-buttons {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .quick-actions {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
+            .header {
+                padding: 20px;
+            }
+
+            .main-content {
+                padding: 15px;
+            }
+
+            .subject-buttons {
+                grid-template-columns: 1fr;
+            }
+
+            .message-content {
+                max-width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎓 Educational AI Assistant</h1>
+            <p>Your Smart Study Companion for All Subjects</p>
+        </div>
+
+        <div class="main-content">
+            <div class="sidebar">
+                <div class="api-setup">
+                    <h3>🔑 API Setup</h3>
+                    <input type="password" class="api-input" id="apiKey" placeholder="Enter your Gemini API Key">
+                    <div class="api-status disconnected" id="apiStatus">API Key Required</div>
+                    <small>Get your free API key from <a href="https://ai.google.dev/" target="_blank">Google AI Studio</a></small>
+                </div>
+
+                <button class="language-toggle" id="languageToggle">🌐 Switch to Hindi</button>
+
+                <div class="subject-buttons">
+                    <button class="subject-btn active" data-subject="general">📚 General Help</button>
+                    <button class="subject-btn" data-subject="math">🔢 Mathematics</button>
+                    <button class="subject-btn" data-subject="physics">⚛️ Physics</button>
+                    <button class="subject-btn" data-subject="chemistry">🧪 Chemistry</button>
+                    <button class="subject-btn" data-subject="biology">🧬 Biology</button>
+                    <button class="subject-btn" data-subject="english">📖 English</button>
+                    <button class="subject-btn" data-subject="hindi">🇮🇳 Hindi</button>
+                    <button class="subject-btn" data-subject="history">🏛️ History</button>
+                    <button class="subject-btn" data-subject="geography">🌍 Geography</button>
+                </div>
+
+                <div class="quick-actions">
+                    <button class="quick-btn" data-action="solve">🧮 Solve Problem</button>
+                    <button class="quick-btn" data-action="explain">💡 Explain Concept</button>
+                    <button class="quick-btn" data-action="practice">📝 Practice Questions</button>
+                    <button class="quick-btn" data-action="summary">📋 Create Summary</button>
+                </div>
+            </div>
+
+            <div class="chat-container">
+                <div class="chat-header">
+                    <h3 id="chatTitle">General Help - Ask me anything!</h3>
+                </div>
+
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message ai">
+                        <div class="message-content">
+                            Welcome! I'm your educational AI assistant. I can help you with:
+                            <br>• Mathematics problems and concepts
+                            <br>• Physics numerical and theory
+                            <br>• Chemistry reactions and equations
+                            <br>• Biology diagrams and explanations
+                            <br>• English grammar and literature
+                            <br>• Hindi language and literature
+                            <br>• History facts and analysis
+                            <br>• Geography maps and climate
+                            <br><br>Please set up your Gemini API key first, then ask me any question!
+                        </div>
+                    </div>
+                </div>
+
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    Processing your question...
+                </div>
+
+                <div class="chat-input-container">
+                    <div class="chat-input-wrapper">
+                        <textarea class="chat-input" id="chatInput" placeholder="Type your question here... (e.g., Solve: 2x + 5 = 15)" rows="1"></textarea>
+                        <button class="send-btn" id="sendBtn">Send</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class EducationalAI {
+            constructor() {
+                this.apiKey = '';
+                this.currentSubject = 'general';
+                this.language = 'english';
+                this.chatMessages = document.getElementById('chatMessages');
+                this.chatInput = document.getElementById('chatInput');
+                this.sendBtn = document.getElementById('sendBtn');
+                this.loading = document.getElementById('loading');
+                this.apiStatus = document.getElementById('apiStatus');
+                this.chatTitle = document.getElementById('chatTitle');
+                
+                this.subjectPrompts = {
+                    general: 'You are a helpful educational assistant. Answer questions clearly and provide step-by-step solutions.',
+                    math: 'You are a mathematics tutor. Solve problems step-by-step, show your work, and explain concepts clearly. Use proper mathematical notation.',
+                    physics: 'You are a physics teacher. Explain concepts with real-world examples, solve numerical problems step-by-step, and include relevant formulas.',
+                    chemistry: 'You are a chemistry expert. Explain reactions, balance equations, and provide molecular explanations with proper chemical notation.',
+                    biology: 'You are a biology teacher. Explain biological processes, describe diagrams, and relate concepts to real-life examples.',
+                    english: 'You are an English language teacher. Help with grammar, literature analysis, essay writing, and vocabulary.',
+                    hindi: 'You are a Hindi language teacher. Help with Hindi grammar, literature, poetry analysis, and vocabulary. Respond in Hindi when appropriate.',
+                    history: 'You are a history teacher. Provide detailed historical context, analyze events, and explain cause-and-effect relationships.',
+                    geography: 'You are a geography teacher. Explain geographical concepts, describe locations, climate patterns, and environmental processes.'
+                };
+
+                this.initializeEventListeners();
+                this.loadApiKey();
+            }
+
+            initializeEventListeners() {
+                // API Key input
+                document.getElementById('apiKey').addEventListener('input', (e) => {
+                    this.apiKey = e.target.value;
+                    this.updateApiStatus();
+                    this.saveApiKey();
+                });
+
+                // Subject buttons
+                document.querySelectorAll('.subject-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        this.selectSubject(e.target.dataset.subject);
+                    });
+                });
+
+                // Quick action buttons
+                document.querySelectorAll('.quick-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        this.handleQuickAction(e.target.dataset.action);
+                    });
+                });
+
+                // Language toggle
+                document.getElementById('languageToggle').addEventListener('click', () => {
+                    this.toggleLanguage();
+                });
+
+                // Send button and Enter key
+                this.sendBtn.addEventListener('click', () => {
+                    this.sendMessage();
+                });
+
+                this.chatInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.sendMessage();
+                    }
+                });
+
+                // Auto-resize textarea
+                this.chatInput.addEventListener('input', () => {
+                    this.chatInput.style.height = 'auto';
+                    this.chatInput.style.height = Math.min(this.chatInput.scrollHeight, 120) + 'px';
+                });
+            }
+
+            loadApiKey() {
+                const savedKey = localStorage.getItem('geminiApiKey');
+                if (savedKey) {
+                    this.apiKey = savedKey;
+                    document.getElementById('apiKey').value = savedKey;
+                    this.updateApiStatus();
+                }
+            }
+
+            saveApiKey() {
+                localStorage.setItem('geminiApiKey', this.apiKey);
+            }
+
+            updateApiStatus() {
+                if (this.apiKey.length > 10) {
+                    this.apiStatus.textContent = 'API Key Connected ✓';
+                    this.apiStatus.className = 'api-status connected';
+                } else {
+                    this.apiStatus.textContent = 'API Key Required';
+                    this.apiStatus.className = 'api-status disconnected';
+                }
+            }
+
+            selectSubject(subject) {
+                this.currentSubject = subject;
+                
+                // Update active button
+                document.querySelectorAll('.subject-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.querySelector(`[data-subject="${subject}"]`).classList.add('active');
+
+                // Update chat title
+                const subjectTitles = {
+                    general: 'General Help - Ask me anything!',
+                    math: 'Mathematics - Solve problems step by step',
+                    physics: 'Physics - Understand concepts and solve numericals',
+                    chemistry: 'Chemistry - Reactions, equations, and concepts',
+                    biology: 'Biology - Life sciences and processes',
+                    english: 'English - Grammar, literature, and writing',
+                    hindi: 'Hindi - भाषा और साहित्य',
+                    history: 'History - Events, dates, and analysis',
+                    geography: 'Geography - Places, maps, and climate'
+                };
+
+                this.chatTitle.textContent = subjectTitles[subject];
+            }
+
+            toggleLanguage() {
+                this.language = this.language === 'english' ? 'hindi' : 'english';
+                const toggle = document.getElementById('languageToggle');
+                toggle.textContent = this.language === 'english' ? '🌐 Switch to Hindi' : '🌐 Switch to English';
+            }
+
+            handleQuickAction(action) {
+                const prompts = {
+                    solve: 'Please solve this problem step by step: ',
+                    explain: 'Please explain this concept in detail: ',
+                    practice: 'Give me practice questions for: ',
+                    summary: 'Create a summary of: '
+                };
+
+                this.chatInput.value = prompts[action];
+                this.chatInput.focus();
+            }
+
+            async sendMessage() {
+                const message = this.chatInput.value.trim();
+                if (!message) return;
+
+                if (!this.apiKey) {
+                    alert('Please enter your Gemini API key first!');
+                    return;
+                }
+
+                // Add user message
+                this.addMessage(message, 'user');
+                this.chatInput.value = '';
+                this.chatInput.style.height = 'auto';
+
+                // Show loading
+                this.showLoading(true);
+
+                try {
+                    const response = await this.callGeminiAPI(message);
+                    this.addMessage(response, 'ai');
+                } catch (error) {
+                    this.addMessage('Sorry, I encountered an error. Please check your API key and try again. Error: ' + error.message, 'ai');
+                } finally {
+                    this.showLoading(false);
+                }
+            }
+
+            async callGeminiAPI(message) {
+                const systemPrompt = this.subjectPrompts[this.currentSubject];
+                const languageInstruction = this.language === 'hindi' ? 
+                    ' Please respond in Hindi when appropriate.' : 
+                    ' Please respond in English.';
+
+                const fullPrompt = systemPrompt + languageInstruction + '\n\nStudent Question: ' + message;
+
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${this.apiKey}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{
+                                text: fullPrompt
+                            }]
+                        }],
+                        generationConfig: {
+                            temperature: 0.7,
+                            topK: 40,
+                            topP: 0.95,
+                            maxOutputTokens: 1024
+                        }
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API request failed: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+                    return data.candidates[0].content.parts[0].text;
+                } else {
+                    throw new Error('Invalid response format from API');
+                }
+            }
+
+            addMessage(content, sender) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${sender}`;
+                
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'message-content';
+                contentDiv.innerHTML = this.formatMessage(content);
+                
+                messageDiv.appendChild(contentDiv);
+                this.chatMessages.appendChild(messageDiv);
+                
+                // Scroll to bottom
+                this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+            }
+
+            formatMessage(content) {
+                // Basic formatting for mathematical expressions and code
+                return content
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                    .replace(/`(.*?)`/g, '<code style="background: #f4f4f4; padding: 2px 4px; border-radius: 3px;">$1</code>')
+                    .replace(/\n/g, '<br>');
+            }
+
+            showLoading(show) {
+                this.loading.classList.toggle('show', show);
+                this.sendBtn.disabled = show;
+                this.chatInput.disabled = show;
+            }
+        }
+
+        // Initialize the application
+        const app = new EducationalAI();
+    </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Educational AI Assistant - Question Solver</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ff6b6b, #feca57);
+            padding: 30px;
+            text-align: center;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        .sidebar {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+        }
+
+        .subject-buttons {
+            display: grid;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .subject-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .subject-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+        }
+
+        .subject-btn.active {
+            background: linear-gradient(135deg, #ff6b6b, #feca57);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(255, 107, 107, 0.3);
+        }
+
+        .api-setup {
+            background: #e8f4f8;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .api-setup h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .api-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-bottom: 10px;
+            transition: border-color 0.3s ease;
+        }
+
+        .api-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .api-status {
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .api-status.connected {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .api-status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .chat-container {
+            background: white;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            height: 600px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 15px 15px 0 0;
+            text-align: center;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .message.user {
+            text-align: right;
+        }
+
+        .message.ai {
+            text-align: left;
+        }
+
+        .message-content {
+            display: inline-block;
+            max-width: 80%;
+            padding: 15px 20px;
+            border-radius: 20px;
+            font-size: 1rem;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .message.ai .message-content {
+            background: white;
+            color: #333;
+            border: 2px solid #e9ecef;
+            border-bottom-left-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            background: white;
+            border-top: 2px solid #e9ecef;
+            border-radius: 0 0 15px 15px;
+        }
+
+        .chat-input-wrapper {
+            display: flex;
+            gap: 15px;
+            align-items: flex-end;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            font-size: 1rem;
+            resize: none;
+            min-height: 50px;
+            max-height: 120px;
+            transition: border-color 0.3s ease;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .send-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            min-width: 80px;
+        }
+
+        .send-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .quick-btn {
+            background: linear-gradient(135deg, #feca57, #ff9ff3);
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .quick-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(254, 202, 87, 0.3);
+        }
+
+        .language-toggle {
+            background: #34495e;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            width: 100%;
+        }
+
+        .language-toggle:hover {
+            background: #2c3e50;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .header p {
+                font-size: 1rem;
+            }
+
+            .chat-container {
+                height: 500px;
+            }
+
+            .subject-buttons {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .quick-actions {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
+            .header {
+                padding: 20px;
+            }
+
+            .main-content {
+                padding: 15px;
+            }
+
+            .subject-buttons {
+                grid-template-columns: 1fr;
+            }
+
+            .message-content {
+                max-width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎓 Educational AI Assistant</h1>
+            <p>Your Smart Study Companion for All Subjects</p>
+        </div>
+
+        <div class="main-content">
+            <div class="sidebar">
+                <div class="api-setup">
+                    <h3>🔑 API Setup</h3>
+                    <input type="password" class="api-input" id="apiKey" placeholder="Enter your Gemini API Key">
+                    <div class="api-status disconnected" id="apiStatus">API Key Required</div>
+                    <small>Get your free API key from <a href="https://ai.google.dev/" target="_blank">Google AI Studio</a></small>
+                </div>
+
+                <button class="language-toggle" id="languageToggle">🌐 Switch to Hindi</button>
+
+                <div class="subject-buttons">
+                    <button class="subject-btn active" data-subject="general">📚 General Help</button>
+                    <button class="subject-btn" data-subject="math">🔢 Mathematics</button>
+                    <button class="subject-btn" data-subject="physics">⚛️ Physics</button>
+                    <button class="subject-btn" data-subject="chemistry">🧪 Chemistry</button>
+                    <button class="subject-btn" data-subject="biology">🧬 Biology</button>
+                    <button class="subject-btn" data-subject="english">📖 English</button>
+                    <button class="subject-btn" data-subject="hindi">🇮🇳 Hindi</button>
+                    <button class="subject-btn" data-subject="history">🏛️ History</button>
+                    <button class="subject-btn" data-subject="geography">🌍 Geography</button>
+                </div>
+
+                <div class="quick-actions">
+                    <button class="quick-btn" data-action="solve">🧮 Solve Problem</button>
+                    <button class="quick-btn" data-action="explain">💡 Explain Concept</button>
+                    <button class="quick-btn" data-action="practice">📝 Practice Questions</button>
+                    <button class="quick-btn" data-action="summary">📋 Create Summary</button>
+                </div>
+            </div>
+
+            <div class="chat-container">
+                <div class="chat-header">
+                    <h3 id="chatTitle">General Help - Ask me anything!</h3>
+                </div>
+
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message ai">
+                        <div class="message-content">
+                            Welcome! I'm your educational AI assistant. I can help you with:
+                            <br>• Mathematics problems and concepts
+                            <br>• Physics numerical and theory
+                            <br>• Chemistry reactions and equations
+                            <br>• Biology diagrams and explanations
+                            <br>• English grammar and literature
+                            <br>• Hindi language and literature
+                            <br>• History facts and analysis
+                            <br>• Geography maps and climate
+                            <br><br>Please set up your Gemini API key first, then ask me any question!
+                        </div>
+                    </div>
+                </div>
+
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    Processing your question...
+                </div>
+
+                <div class="chat-input-container">
+                    <div class="chat-input-wrapper">
+                        <textarea class="chat-input" id="chatInput" placeholder="Type your question here... (e.g., Solve: 2x + 5 = 15)" rows="1"></textarea>
+                        <button class="send-btn" id="sendBtn">Send</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class EducationalAI {
+            constructor() {
+                this.apiKey = '';
+                this.currentSubject = 'general';
+                this.language = 'english';
+                this.chatMessages = document.getElementById('chatMessages');
+                this.chatInput = document.getElementById('chatInput');
+                this.sendBtn = document.getElementById('sendBtn');
+                this.loading = document.getElementById('loading');
+                this.apiStatus = document.getElementById('apiStatus');
+                this.chatTitle = document.getElementById('chatTitle');
+                
+                this.subjectPrompts = {
+                    general: 'You are a helpful educational assistant. Answer questions clearly and provide step-by-step solutions.',
+                    math: 'You are a mathematics tutor. Solve problems step-by-step, show your work, and explain concepts clearly. Use proper mathematical notation.',
+                    physics: 'You are a physics teacher. Explain concepts with real-world examples, solve numerical problems step-by-step, and include relevant formulas.',
+                    chemistry: 'You are a chemistry expert. Explain reactions, balance equations, and provide molecular explanations with proper chemical notation.',
+                    biology: 'You are a biology teacher. Explain biological processes, describe diagrams, and relate concepts to real-life examples.',
+                    english: 'You are an English language teacher. Help with grammar, literature analysis, essay writing, and vocabulary.',
+                    hindi: 'You are a Hindi language teacher. Help with Hindi grammar, literature, poetry analysis, and vocabulary. Respond in Hindi when appropriate.',
+                    history: 'You are a history teacher. Provide detailed historical context, analyze events, and explain cause-and-effect relationships.',
+                    geography: 'You are a geography teacher. Explain geographical concepts, describe locations, climate patterns, and environmental processes.'
+                };
+
+                this.initializeEventListeners();
+                this.loadApiKey();
+            }
+
+            initializeEventListeners() {
+                // API Key input
+                document.getElementById('apiKey').addEventListener('input', (e) => {
+                    this.apiKey = e.target.value;
+                    this.updateApiStatus();
+                    this.saveApiKey();
+                });
+
+                // Subject buttons
+                document.querySelectorAll('.subject-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        this.selectSubject(e.target.dataset.subject);
+                    });
+                });
+
+                // Quick action buttons
+                document.querySelectorAll('.quick-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        this.handleQuickAction(e.target.dataset.action);
+                    });
+                });
+
+                // Language toggle
+                document.getElementById('languageToggle').addEventListener('click', () => {
+                    this.toggleLanguage();
+                });
+
+                // Send button and Enter key
+                this.sendBtn.addEventListener('click', () => {
+                    this.sendMessage();
+                });
+
+                this.chatInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.sendMessage();
+                    }
+                });
+
+                // Auto-resize textarea
+                this.chatInput.addEventListener('input', () => {
+                    this.chatInput.style.height = 'auto';
+                    this.chatInput.style.height = Math.min(this.chatInput.scrollHeight, 120) + 'px';
+                });
+            }
+
+            loadApiKey() {
+                const savedKey = localStorage.getItem('geminiApiKey');
+                if (savedKey) {
+                    this.apiKey = savedKey;
+                    document.getElementById('apiKey').value = savedKey;
+                    this.updateApiStatus();
+                }
+            }
+
+            saveApiKey() {
+                localStorage.setItem('geminiApiKey', this.apiKey);
+            }
+
+            updateApiStatus() {
+                if (this.apiKey.length > 10) {
+                    this.apiStatus.textContent = 'API Key Connected ✓';
+                    this.apiStatus.className = 'api-status connected';
+                } else {
+                    this.apiStatus.textContent = 'API Key Required';
+                    this.apiStatus.className = 'api-status disconnected';
+                }
+            }
+
+            selectSubject(subject) {
+                this.currentSubject = subject;
+                
+                // Update active button
+                document.querySelectorAll('.subject-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.querySelector(`[data-subject="${subject}"]`).classList.add('active');
+
+                // Update chat title
+                const subjectTitles = {
+                    general: 'General Help - Ask me anything!',
+                    math: 'Mathematics - Solve problems step by step',
+                    physics: 'Physics - Understand concepts and solve numericals',
+                    chemistry: 'Chemistry - Reactions, equations, and concepts',
+                    biology: 'Biology - Life sciences and processes',
+                    english: 'English - Grammar, literature, and writing',
+                    hindi: 'Hindi - भाषा और साहित्य',
+                    history: 'History - Events, dates, and analysis',
+                    geography: 'Geography - Places, maps, and climate'
+                };
+
+                this.chatTitle.textContent = subjectTitles[subject];
+            }
+
+            toggleLanguage() {
+                this.language = this.language === 'english' ? 'hindi' : 'english';
+                const toggle = document.getElementById('languageToggle');
+                toggle.textContent = this.language === 'english' ? '🌐 Switch to Hindi' : '🌐 Switch to English';
+            }
+
+            handleQuickAction(action) {
+                const prompts = {
+                    solve: 'Please solve this problem step by step: ',
+                    explain: 'Please explain this concept in detail: ',
+                    practice: 'Give me practice questions for: ',
+                    summary: 'Create a summary of: '
+                };
+
+                this.chatInput.value = prompts[action];
+                this.chatInput.focus();
+            }
+
+            async sendMessage() {
+                const message = this.chatInput.value.trim();
+                if (!message) return;
+
+                if (!this.apiKey) {
+                    alert('Please enter your Gemini API key first!');
+                    return;
+                }
+
+                // Add user message
+                this.addMessage(message, 'user');
+                this.chatInput.value = '';
+                this.chatInput.style.height = 'auto';
+
+                // Show loading
+                this.showLoading(true);
+
+                try {
+                    const response = await this.callGeminiAPI(message);
+                    this.addMessage(response, 'ai');
+                } catch (error) {
+                    this.addMessage('Sorry, I encountered an error. Please check your API key and try again. Error: ' + error.message, 'ai');
+                } finally {
+                    this.showLoading(false);
+                }
+            }
+
+            async callGeminiAPI(message) {
+                const systemPrompt = this.subjectPrompts[this.currentSubject];
+                const languageInstruction = this.language === 'hindi' ? 
+                    ' Please respond in Hindi when appropriate.' : 
+                    ' Please respond in English.';
+
+                const fullPrompt = systemPrompt + languageInstruction + '\n\nStudent Question: ' + message;
+
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${this.apiKey}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{
+                                text: fullPrompt
+                            }]
+                        }],
+                        generationConfig: {
+                            temperature: 0.7,
+                            topK: 40,
+                            topP: 0.95,
+                            maxOutputTokens: 1024
+                        }
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API request failed: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+                    return data.candidates[0].content.parts[0].text;
+                } else {
+                    throw new Error('Invalid response format from API');
+                }
+            }
+
+            addMessage(content, sender) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${sender}`;
+                
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'message-content';
+                contentDiv.innerHTML = this.formatMessage(content);
+                
+                messageDiv.appendChild(contentDiv);
+                this.chatMessages.appendChild(messageDiv);
+                
+                // Scroll to bottom
+                this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+            }
+
+            formatMessage(content) {
+                // Basic formatting for mathematical expressions and code
+                return content
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                    .replace(/`(.*?)`/g, '<code style="background: #f4f4f4; padding: 2px 4px; border-radius: 3px;">$1</code>')
+                    .replace(/\n/g, '<br>');
+            }
+
+            showLoading(show) {
+                this.loading.classList.toggle('show', show);
+                this.sendBtn.disabled = show;
+                this.chatInput.disabled = show;
+            }
+        }
+
+        // Initialize the application
+        const app = new EducationalAI();
+    </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Educational AI Assistant - Question Solver</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ff6b6b, #feca57);
+            padding: 30px;
+            text-align: center;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        .sidebar {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+        }
+
+        .subject-buttons {
+            display: grid;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .subject-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .subject-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+        }
+
+        .subject-btn.active {
+            background: linear-gradient(135deg, #ff6b6b, #feca57);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(255, 107, 107, 0.3);
+        }
+
+        .api-setup {
+            background: #e8f4f8;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .api-setup h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .api-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-bottom: 10px;
+            transition: border-color 0.3s ease;
+        }
+
+        .api-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .api-status {
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .api-status.connected {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .api-status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .chat-container {
+            background: white;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            height: 600px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 15px 15px 0 0;
+            text-align: center;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .message.user {
+            text-align: right;
+        }
+
+        .message.ai {
+            text-align: left;
+        }
+
+        .message-content {
+            display: inline-block;
+            max-width: 80%;
+            padding: 15px 20px;
+            border-radius: 20px;
+            font-size: 1rem;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .message.ai .message-content {
+            background: white;
+            color: #333;
+            border: 2px solid #e9ecef;
+            border-bottom-left-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            background: white;
+            border-top: 2px solid #e9ecef;
+            border-radius: 0 0 15px 15px;
+        }
+
+        .chat-input-wrapper {
+            display: flex;
+            gap: 15px;
+            align-items: flex-end;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            font-size: 1rem;
+            resize: none;
+            min-height: 50px;
+            max-height: 120px;
+            transition: border-color 0.3s ease;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .send-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            min-width: 80px;
+        }
+
+        .send-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .quick-btn {
+            background: linear-gradient(135deg, #feca57, #ff9ff3);
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .quick-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(254, 202, 87, 0.3);
+        }
+
+        .language-toggle {
+            background: #34495e;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            width: 100%;
+        }
+
+        .language-toggle:hover {
+            background: #2c3e50;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .header p {
+                font-size: 1rem;
+            }
+
+            .chat-container {
+                height: 500px;
+            }
+
+            .subject-buttons {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .quick-actions {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
+            .header {
+                padding: 20px;
+            }
+
+            .main-content {
+                padding: 15px;
+            }
+
+            .subject-buttons {
+                grid-template-columns: 1fr;
+            }
+
+            .message-content {
+                max-width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎓 Educational AI Assistant</h1>
+            <p>Your Smart Study Companion for All Subjects</p>
+        </div>
+
+        <div class="main-content">
+            <div class="sidebar">
+                <div class="api-setup">
+                    <h3>🔑 API Setup</h3>
+                    <input type="password" class="api-input" id="apiKey" placeholder="Enter your Gemini API Key">
+                    <div class="api-status disconnected" id="apiStatus">API Key Required</div>
+                    <small>Get your free API key from <a href="https://ai.google.dev/" target="_blank">Google AI Studio</a></small>
+                </div>
+
+                <button class="language-toggle" id="languageToggle">🌐 Switch to Hindi</button>
+
+                <div class="subject-buttons">
+                    <button class="subject-btn active" data-subject="general">📚 General Help</button>
+                    <button class="subject-btn" data-subject="math">🔢 Mathematics</button>
+                    <button class="subject-btn" data-subject="physics">⚛️ Physics</button>
+                    <button class="subject-btn" data-subject="chemistry">🧪 Chemistry</button>
+                    <button class="subject-btn" data-subject="biology">🧬 Biology</button>
+                    <button class="subject-btn" data-subject="english">📖 English</button>
+                    <button class="subject-btn" data-subject="hindi">🇮🇳 Hindi</button>
+                    <button class="subject-btn" data-subject="history">🏛️ History</button>
+                    <button class="subject-btn" data-subject="geography">🌍 Geography</button>
+                </div>
+
+                <div class="quick-actions">
+                    <button class="quick-btn" data-action="solve">🧮 Solve Problem</button>
+                    <button class="quick-btn" data-action="explain">💡 Explain Concept</button>
+                    <button class="quick-btn" data-action="practice">📝 Practice Questions</button>
+                    <button class="quick-btn" data-action="summary">📋 Create Summary</button>
+                </div>
+            </div>
+
+            <div class="chat-container">
+                <div class="chat-header">
+                    <h3 id="chatTitle">General Help - Ask me anything!</h3>
+                </div>
+
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message ai">
+                        <div class="message-content">
+                            Welcome! I'm your educational AI assistant. I can help you with:
+                            <br>• Mathematics problems and concepts
+                            <br>• Physics numerical and theory
+                            <br>• Chemistry reactions and equations
+                            <br>• Biology diagrams and explanations
+                            <br>• English grammar and literature
+                            <br>• Hindi language and literature
+                            <br>• History facts and analysis
+                            <br>• Geography maps and climate
+                            <br><br>Please set up your Gemini API key first, then ask me any question!
+                        </div>
+                    </div>
+                </div>
+
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    Processing your question...
+                </div>
+
+                <div class="chat-input-container">
+                    <div class="chat-input-wrapper">
+                        <textarea class="chat-input" id="chatInput" placeholder="Type your question here... (e.g., Solve: 2x + 5 = 15)" rows="1"></textarea>
+                        <button class="send-btn" id="sendBtn">Send</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class EducationalAI {
+            constructor() {
+                this.apiKey = '';
+                this.currentSubject = 'general';
+                this.language = 'english';
+                this.chatMessages = document.getElementById('chatMessages');
+                this.chatInput = document.getElementById('chatInput');
+                this.sendBtn = document.getElementById('sendBtn');
+                this.loading = document.getElementById('loading');
+                this.apiStatus = document.getElementById('apiStatus');
+                this.chatTitle = document.getElementById('chatTitle');
+                
+                this.subjectPrompts = {
+                    general: 'You are a helpful educational assistant. Answer questions clearly and provide step-by-step solutions.',
+                    math: 'You are a mathematics tutor. Solve problems step-by-step, show your work, and explain concepts clearly. Use proper mathematical notation.',
+                    physics: 'You are a physics teacher. Explain concepts with real-world examples, solve numerical problems step-by-step, and include relevant formulas.',
+                    chemistry: 'You are a chemistry expert. Explain reactions, balance equations, and provide molecular explanations with proper chemical notation.',
+                    biology: 'You are a biology teacher. Explain biological processes, describe diagrams, and relate concepts to real-life examples.',
+                    english: 'You are an English language teacher. Help with grammar, literature analysis, essay writing, and vocabulary.',
+                    hindi: 'You are a Hindi language teacher. Help with Hindi grammar, literature, poetry analysis, and vocabulary. Respond in Hindi when appropriate.',
+                    history: 'You are a history teacher. Provide detailed historical context, analyze events, and explain cause-and-effect relationships.',
+                    geography: 'You are a geography teacher. Explain geographical concepts, describe locations, climate patterns, and environmental processes.'
+                };
+
+                this.initializeEventListeners();
+                this.loadApiKey();
+            }
+
+            initializeEventListeners() {
+                // API Key input
+                document.getElementById('apiKey').addEventListener('input', (e) => {
+                    this.apiKey = e.target.value;
+                    this.updateApiStatus();
+                    this.saveApiKey();
+                });
+
+                // Subject buttons
+                document.querySelectorAll('.subject-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        this.selectSubject(e.target.dataset.subject);
+                    });
+                });
+
+                // Quick action buttons
+                document.querySelectorAll('.quick-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        this.handleQuickAction(e.target.dataset.action);
+                    });
+                });
+
+                // Language toggle
+                document.getElementById('languageToggle').addEventListener('click', () => {
+                    this.toggleLanguage();
+                });
+
+                // Send button and Enter key
+                this.sendBtn.addEventListener('click', () => {
+                    this.sendMessage();
+                });
+
+                this.chatInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.sendMessage();
+                    }
+                });
+
+                // Auto-resize textarea
+                this.chatInput.addEventListener('input', () => {
+                    this.chatInput.style.height = 'auto';
+                    this.chatInput.style.height = Math.min(this.chatInput.scrollHeight, 120) + 'px';
+                });
+            }
+
+            loadApiKey() {
+                const savedKey = localStorage.getItem('geminiApiKey');
+                if (savedKey) {
+                    this.apiKey = savedKey;
+                    document.getElementById('apiKey').value = savedKey;
+                    this.updateApiStatus();
+                }
+            }
+
+            saveApiKey() {
+                localStorage.setItem('geminiApiKey', this.apiKey);
+            }
+
+            updateApiStatus() {
+                if (this.apiKey.length > 10) {
+                    this.apiStatus.textContent = 'API Key Connected ✓';
+                    this.apiStatus.className = 'api-status connected';
+                } else {
+                    this.apiStatus.textContent = 'API Key Required';
+                    this.apiStatus.className = 'api-status disconnected';
+                }
+            }
+
+            selectSubject(subject) {
+                this.currentSubject = subject;
+                
+                // Update active button
+                document.querySelectorAll('.subject-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.querySelector(`[data-subject="${subject}"]`).classList.add('active');
+
+                // Update chat title
+                const subjectTitles = {
+                    general: 'General Help - Ask me anything!',
+                    math: 'Mathematics - Solve problems step by step',
+                    physics: 'Physics - Understand concepts and solve numericals',
+                    chemistry: 'Chemistry - Reactions, equations, and concepts',
+                    biology: 'Biology - Life sciences and processes',
+                    english: 'English - Grammar, literature, and writing',
+                    hindi: 'Hindi - भाषा और साहित्य',
+                    history: 'History - Events, dates, and analysis',
+                    geography: 'Geography - Places, maps, and climate'
+                };
+
+                this.chatTitle.textContent = subjectTitles[subject];
+            }
+
+            toggleLanguage() {
+                this.language = this.language === 'english' ? 'hindi' : 'english';
+                const toggle = document.getElementById('languageToggle');
+                toggle.textContent = this.language === 'english' ? '🌐 Switch to Hindi' : '🌐 Switch to English';
+            }
+
+            handleQuickAction(action) {
+                const prompts = {
+                    solve: 'Please solve this problem step by step: ',
+                    explain: 'Please explain this concept in detail: ',
+                    practice: 'Give me practice questions for: ',
+                    summary: 'Create a summary of: '
+                };
+
+                this.chatInput.value = prompts[action];
+                this.chatInput.focus();
+            }
+
+            async sendMessage() {
+                const message = this.chatInput.value.trim();
+                if (!message) return;
+
+                if (!this.apiKey) {
+                    alert('Please enter your Gemini API key first!');
+                    return;
+                }
+
+                // Add user message
+                this.addMessage(message, 'user');
+                this.chatInput.value = '';
+                this.chatInput.style.height = 'auto';
+
+                // Show loading
+                this.showLoading(true);
+
+                try {
+                    const response = await this.callGeminiAPI(message);
+                    this.addMessage(response, 'ai');
+                } catch (error) {
+                    this.addMessage('Sorry, I encountered an error. Please check your API key and try again. Error: ' + error.message, 'ai');
+                } finally {
+                    this.showLoading(false);
+                }
+            }
+
+            async callGeminiAPI(message) {
+                const systemPrompt = this.subjectPrompts[this.currentSubject];
+                const languageInstruction = this.language === 'hindi' ? 
+                    ' Please respond in Hindi when appropriate.' : 
+                    ' Please respond in English.';
+
+                const fullPrompt = systemPrompt + languageInstruction + '\n\nStudent Question: ' + message;
+
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${this.apiKey}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{
+                                text: fullPrompt
+                            }]
+                        }],
+                        generationConfig: {
+                            temperature: 0.7,
+                            topK: 40,
+                            topP: 0.95,
+                            maxOutputTokens: 1024
+                        }
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API request failed: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+                    return data.candidates[0].content.parts[0].text;
+                } else {
+                    throw new Error('Invalid response format from API');
+                }
+            }
+
+            addMessage(content, sender) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${sender}`;
+                
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'message-content';
+                contentDiv.innerHTML = this.formatMessage(content);
+                
+                messageDiv.appendChild(contentDiv);
+                this.chatMessages.appendChild(messageDiv);
+                
+                // Scroll to bottom
+                this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+            }
+
+            formatMessage(content) {
+                // Basic formatting for mathematical expressions and code
+                return content
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                    .replace(/`(.*?)`/g, '<code style="background: #f4f4f4; padding: 2px 4px; border-radius: 3px;">$1</code>')
+                    .replace(/\n/g, '<br>');
+            }
+
+            showLoading(show) {
+                this.loading.classList.toggle('show', show);
+                this.sendBtn.disabled = show;
+                this.chatInput.disabled = show;
+            }
+        }
+
+        // Initialize the application
+        const app = new EducationalAI();
+    </script>
+</body>
+</html>
