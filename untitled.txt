@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<meta name="google-site-verification" content="C8IRhenkdrBY1DQ3U8Hb_H1ESdYnn26XiOkuUzIh_ho" />
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Educational AI Assistant - Question Solver</title>
