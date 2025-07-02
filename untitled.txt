@@ -39,7 +39,7 @@
             font-size: 2.5rem;
             margin-bottom: 10px;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-        }
+        }<meta name="google-site-verification" content="C8IRhenkdrBY1DQ3U8Hb_H1ESdYnn26XiOkuUzIh_ho" />
 
         .header p {
             font-size: 1.2rem;
